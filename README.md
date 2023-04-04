@@ -1,3 +1,5 @@
+ ![alt text](https://cdn.statically.io/gh/Sudo-Ivan/MyWebsite-Assets/main/images/logo/datahinge.png)
+
 # DataHinge-CLI
 
 DataHinge-CLI is a command-line interface (CLI) tool that makes it easy to manage and process data files. Whether you need to clean up messy datasets, extract specific information, or transform data into a different format.
