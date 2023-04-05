@@ -18,26 +18,24 @@ DataHinge-CLI is a command-line interface (CLI) tool that makes it easy to gathe
 
 DataHinge requires Python 3.6 or later. To install, simply run:
 
-`pip3 install datahinge-cli`
+WIP
 
 ## Usage
 
 To run DataHinge, simply enter the following command in your terminal:
 
-`datahinge-cli`
+WIP
 
 This will start the interactive CLI, where you can choose from available modules or create your own.
 
 ## Available Modules
 
-DataHinge comes with several built-in modules for common data processing tasks:
+DataHinge comes with some basic built-in modules right now, but I will be adding much more:
 
--   `emptyremover`: A tool to remove empty directories in a specified directory
--   `mrcleaner`: Cleans directory and sub-directory everything except a file extension
+-   `mrcleaner`: Cleans directory and sub-directory everything except a file extension or cleans empty folders
 -   `gh_repo_downloader`: Clone GitHub repositories based on criteria.
 
 Use the `module` command to select and run a module:
-
 
 `DataHinge module mrcleaner --dir /path/to/directory --file-ext .txt --num-workers 4`
 
