@@ -1,0 +1,103 @@
+{
+    "modules": [
+        {
+            "mrcleaner": {
+                "title": "Mr. Cleaner",
+                "description": "Cleans directory and sub-directory everything except a file extension.",
+                "meta_title": "Clean Directory",
+                "args": [
+                    {
+                        "name": "dir_path",
+                        "description": "The directory to clean.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "file_ext",
+                        "description": "The file extension to keep (e.g. '.py').",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "num_workers",
+                        "description": "The number of worker threads to use (default: 1).",
+                        "required": false,
+                        "type": "int",
+                        "default": 1
+                    }
+                ]
+            }
+        },
+        {
+            "gh_repo_downloader": {
+                "title": "GitHub Repository Downloader",
+                "description": "Clone GitHub repositories based on criteria.",
+                "meta_title": "Download GitHub Repositories",
+                "args": [
+                    {
+                        "name": "--output-dir",
+                        "description": "The directory to save the cloned repositories.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "--stars",
+                        "description": "The minimum number of stars for repositories to clone.",
+                        "required": true,
+                        "type": "int"
+                    },
+                    {
+                        "name": "--size-limit",
+                        "description": "The maximum size limit in MB for repositories to clone.",
+                        "required": true,
+                        "type": "int"
+                    },
+                    {
+                        "name": "--code-type",
+                        "description": "The code type to search for on GitHub.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "--age",
+                        "description": "The age of repositories to search for in years (default: 5).",
+                        "required": false,
+                        "type": "int",
+                        "default": 5
+                    },
+                    {
+                        "name": "--csv-file",
+                        "description": "The name of the CSV file to log the cloned repositories (default: repositories.csv).",
+                        "required": false,
+                        "type": "string",
+                        "default": "repositories.csv"
+                    },
+                    {
+                        "name": "--by-user",
+                        "description": "The username of the repository owner.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "--by-organization",
+                        "description": "The organization name to search for repositories.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "--code-percentage",
+                        "description": "The percentage of code in a repository to search for.",
+                        "required": false,
+                        "type": "int"
+                    },
+                    {
+                        "name": "--repo-name",
+                        "description": "The repository name to search for.",
+                        "required": false,
+                        "type": "string"
+                    }
+                ]
+            }
+        }
+    ]
+}
