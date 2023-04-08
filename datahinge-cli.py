@@ -39,7 +39,11 @@ def load_scripts() -> Dict[str, Dict[str, Any]]:
     for filename in [f for f in os.listdir("scripts") if f.endswith(".py") and not f.startswith("__")]:
         module_name = filename[:-3]
         module_data = modules_data.get(module_name, {})
-        module = importlib.import_module(f"scripts.{module_name}")
+        try:
+            module = importlib.import_module(f"scripts.{module_name}")
+        except ModuleNotFoundError:
+            print(f"Error: Could not import module {module_name}")
+            continue
         scripts[module_name] = {
             "module": module,
             "title": module_data.get("title", module_name),
@@ -53,7 +57,6 @@ def load_scripts() -> Dict[str, Dict[str, Any]]:
             scripts[module_name]["module"].main = module.main
 
     return scripts
-
 
 def main() -> None:
     """Main CLI function."""
