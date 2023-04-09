@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import subprocess
 from typing import Any, Dict, List
 
 def create_module(module_name: str, args: List[Dict[str, Any]], overwrite: bool = False, force: bool = False) -> None:
@@ -63,8 +64,24 @@ def create_module(module_name: str, args: List[Dict[str, Any]], overwrite: bool 
         f.seek(0)
         json.dump(data, f, indent=4)
 
-    print(f"Module {module_name} created successfully.")
+    # Check if the user wants to add a dependency
+    while True:
+        choice = input("Do you want to add a dependency? (y/n) ")
+        if choice.lower() == "y":
+            dependency = input("Enter the name of the dependency: ")
+            # Verify that the dependency exists on PyPI
+            try:
+                subprocess.check_call(["pip", "search", dependency])
+                # Add the dependency to requirements.txt
+                with open("requirements.txt", "a") as f:
+                    f.write(f"{dependency}\n")
+                print(f"Dependency {dependency} added successfully.")
+            except subprocess.CalledProcessError:
+                print(f"Error: Dependency {dependency} not found on PyPI.")
+        elif choice.lower() == "n":
+            break
 
+    print(f"Module {module_name} created successfully.")
 
 def select_arg_type() -> str:
     """Prompt the user to select an argument type."""
