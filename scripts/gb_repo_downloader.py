@@ -100,7 +100,7 @@ def main(args_list):
 
         time.sleep(3)  # Add a 3-second delay between each page request
 
-        if not futures: # No more futures to wait for
+        if not futures:
 
             # Wait for futures to complete
             for future in as_completed(futures, timeout=3):
