@@ -5,7 +5,12 @@ import os
 import sys
 import readline
 from typing import List, Dict, Any, Tuple
+from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.history import FileHistory
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.lexers import PygmentsLexer
+from pygments.lexers.shell import BashLexer
 
 
 def completer(text: str, state: int) -> str:
@@ -16,15 +21,17 @@ def completer(text: str, state: int) -> str:
         return options[state]
     else:
         return None
-        
+
+
 class ModuleCompleter(Completer):
     """Completion class for module selector."""
-    def __init__(self, modules):
-        self.modules = modules
+
+    def __init__(self, scripts):
+        self.scripts = scripts
 
     def get_completions(self, document, complete_event):
         word_before_cursor = document.get_word_before_cursor()
-        matches = [mod for mod in self.modules if mod.startswith(word_before_cursor)]
+        matches = [mod for mod in self.scripts if mod.startswith(word_before_cursor)]
         for m in matches:
             yield Completion(m, -len(word_before_cursor))
 
@@ -58,6 +65,7 @@ def load_scripts() -> Dict[str, Dict[str, Any]]:
 
     return scripts
 
+
 def main() -> None:
     """Main CLI function."""
     readline.set_completer(completer)
@@ -66,9 +74,15 @@ def main() -> None:
     print("Welcome to Ivan's Data CLI Tool!")
     scripts = load_scripts()
 
+    session = PromptSession(
+        history=FileHistory(".cli_tool_history"),
+        auto_suggest=AutoSuggestFromHistory(),
+        lexer=PygmentsLexer(BashLexer),
+    )
+
     while True:
         try:
-            user_input = input("Enter a command: ").split()
+            user_input = session.prompt("Enter a command: ", completer=ModuleCompleter(scripts)).split()
             if not user_input:
                 continue
 
@@ -124,7 +138,6 @@ def main() -> None:
         except KeyboardInterrupt:
             print("\nExiting...")
             break
-
 
 if __name__ == "__main__":
     main()
