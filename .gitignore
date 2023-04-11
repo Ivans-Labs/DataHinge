@@ -1,3 +1,4 @@
 .cli_tool_history
 *.csv
 .pyc
+__pycache__

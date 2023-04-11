@@ -7,6 +7,7 @@ import readline
 import asyncio
 import logging
 import configparser
+
 from typing import List, Dict, Any, Tuple
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import Completer, Completion
@@ -57,7 +58,6 @@ async def run_script(script, arguments):
             await asyncio.sleep(0.005)
     script["module"].main(arguments)
 
-
 def load_scripts() -> Dict[str, Dict[str, Any]]:
     """Load module data and import modules."""
     sys.path.append(os.path.join(os.getcwd(), "scripts"))
@@ -65,25 +65,31 @@ def load_scripts() -> Dict[str, Dict[str, Any]]:
     scripts = {}
     with open("modules.json") as f:
         modules_data = json.load(f)
-    for filename in [f for f in os.listdir("scripts") if f.endswith(".py") and not f.startswith("__")]:
-        module_name = filename[:-3]
-        module_data = modules_data.get(module_name, {})
-        try:
-            module = importlib.import_module(f"scripts.{module_name}")
-        except ModuleNotFoundError:
-            print(f"Error: Could not import module {module_name}")
-            continue
-        scripts[module_name] = {
-            "module": module,
-            "title": module_data.get("title", module_name),
-            "meta_title": module_data.get("meta_title", module_name),
-            "description": module_data.get("description", ""),
-            "args": module_data.get("args", []),
-        }
-        print(f"Loaded module {module_name}")
 
-        if module_name == "gh_repo_downloader":
-            scripts[module_name]["module"].main = module.main
+    for root, dirs, files in os.walk(os.path.join(os.getcwd(), "scripts")):
+        for file_name in files:
+            if file_name.endswith(".py"):
+                module_name = file_name[:-3]
+                file_path = os.path.join(root, file_name)
+                module_data = modules_data.get(module_name, {})
+                try:
+                    spec = importlib.util.spec_from_file_location(module_name, file_path)
+                    module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(module)
+                except ModuleNotFoundError:
+                    print(f"Error: Could not import module {module_name}")
+                    continue
+                scripts[module_name] = {
+                    "module": module,
+                    "title": module_data.get("title", module_name),
+                    "meta_title": module_data.get("meta_title", module_name),
+                    "description": module_data.get("description", ""),
+                    "args": module_data.get("args", []),
+                }
+                print(f"Loaded module {module_name}")
+
+                if module_name == "gh_repo_downloader":
+                    scripts[module_name]["module"].main = module.main
 
     return scripts
     
