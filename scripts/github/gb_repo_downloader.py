@@ -15,13 +15,18 @@ def download_repo(repo_url, output_dir, csv_file, headers):
         if "Authorization" in headers:
             env["GIT_HTTP_AUTHORIZATION"] = headers["Authorization"]
 
-        repo = git.Repo.clone_from(repo_url, os.path.join(output_dir, os.path.basename(repo_url)), env=env)
-        print(f"Repository {repo.name} cloned.")
+        repo_name = os.path.basename(repo_url)
+        if not repo_name:
+            repo_name = datetime.now().strftime('%Y%m%d%H%M%S%f')
+
+        repo_path = os.path.join(output_dir, repo_name)
+        repo = git.Repo.clone_from(repo_url, repo_path, env=env)
+        print(f"Repository {repo_name} cloned.")
 
         # Log the repository details to CSV file
         with open(csv_file, mode='a', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow([repo.name, repo_url, datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')])
+            writer.writerow([repo_name, repo_url, datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')])
 
     except Exception as e:
         print(f"Error cloning repository {repo_url}: {e}")
