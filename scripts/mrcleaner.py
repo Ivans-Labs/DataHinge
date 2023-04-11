@@ -1,49 +1,69 @@
 import os
 import sys
+import random
 import argparse
 import concurrent.futures
 
 
-def clean_directory(dir_path, file_ext, num_workers, remove_empty=False):
+def secure_delete(file_path, passes=3):
+    with open(file_path, "ba+") as f:
+        length = f.tell()
+    for _ in range(passes):
+        with open(file_path, "br+") as f:
+            f.seek(0)
+            f.write(os.urandom(length))
+    os.remove(file_path)
+
+
+def clean_directory(dir_path, file_ext, num_workers, remove_subdirs=False, secure_delete_flag=False, skip_confirm=False):
     count_files = 0
     count_dirs = 0
+    file_paths = []
+    dir_paths = []
+    
+    for root, dirs, files in os.walk(dir_path):
+        for f in files:
+            if not f.endswith(file_ext):
+                file_paths.append(os.path.join(root, f))
+                count_files += 1
+        if remove_subdirs:
+            for d in dirs:
+                dir_paths.append(os.path.join(root, d))
+                count_dirs += 1
+
+    print(f"Target directory: {dir_path}")
+    print(f"Number of files to be deleted: {count_files}")
+    if remove_subdirs:
+        print(f"Number of subdirectories to be deleted: {count_dirs}")
+
+    if skip_confirm:
+        print("Skipping confirmation check.")
+    else:
+        confirm = input("Are you sure you want to proceed with the deletion? (y/n): ")
+        if confirm.lower() != 'y':
+            print("Aborted.")
+            return
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
         futures = []
-        for root, dirs, files in os.walk(dir_path):
-            for f in files:
-                if not f.endswith(file_ext):
-                    future = executor.submit(os.remove, os.path.join(root, f))
-                    futures.append(future)
-                    count_files += 1
-            if remove_empty and not os.listdir(root):
-                future = executor.submit(os.rmdir, root)
-                futures.append(future)
-                count_dirs += 1
+        for file_path in file_paths:
+            if secure_delete_flag:
+                future = executor.submit(secure_delete, file_path)
+            else:
+                future = executor.submit(os.remove, file_path)
+            futures.append(future)
+        for dir_path in dir_paths:
+            future = executor.submit(os.rmdir, dir_path)
+            futures.append(future)
         for future in concurrent.futures.as_completed(futures):
             try:
                 future.result()
             except OSError as e:
                 print(f"Error deleting file/directory: {e}")
-        print(f"Total {count_files} files deleted.")
-        if remove_empty:
-            print(f"Total {count_dirs} empty directories deleted.")
 
-
-def empty_folder_remover(dir_path, num_workers):
-    count = 0
-    with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
-        futures = []
-        for root, dirs, files in os.walk(dir_path, topdown=False):
-            for dir in dirs:
-                future = executor.submit(os.rmdir, os.path.join(root, dir))
-                futures.append(future)
-        for future in concurrent.futures.as_completed(futures):
-            try:
-                future.result()
-                count += 1
-            except OSError as e:
-                print(f"Error deleting directory: {e}")
-        print(f"Total {count} empty directories deleted.")
+    print(f"Total {count_files} files deleted.")
+    if remove_subdirs:
+        print(f"Total {count_dirs} subdirectories deleted.")
 
 
 def main(args):
@@ -51,17 +71,19 @@ def main(args):
     parser.add_argument("dir_path", type=str, help="The directory path to clean")
     parser.add_argument("--file-ext", type=str, default=".py", help="The file extension to keep (default: .py)")
     parser.add_argument("--num-workers", type=int, default=5, help="The number of worker threads to use (default: 5)")
-    parser.add_argument("--remove-empty", action="store_true", help="Remove empty directories")
+    parser.add_argument("--remove-subdirs", action="store_true", help="Remove all subdirectories in the given directory")
+    parser.add_argument("--secure-delete", action="store_true", help="Securely delete files using DoD 5220.22-M standard")
+    parser.add_argument("--skip-confirm", type=str, default="n", help="Skip confirmation check before deleting files (default: n)")    
     parsed_args = parser.parse_args(args)
 
     if not os.path.isdir(parsed_args.dir_path):
         print(f"Error: {parsed_args.dir_path} is not a directory.")
         return
     else:
-        print(f"Cleaning directory: {parsed_args.dir_path}")
-        clean_directory(parsed_args.dir_path, parsed_args.file_ext, parsed_args.num_workers, parsed_args.remove_empty)
-        if parsed_args.remove_empty:
-            empty_folder_remover(parsed_args.dir_path, parsed_args.num_workers)
+        if parsed_args.skip_confirm.lower() == 'y':
+            clean_directory(parsed_args.dir_path, parsed_args.file_ext, parsed_args.num_workers, parsed_args.remove_subdirs, parsed_args.secure_delete, skip_confirm=True)
+        else:
+            clean_directory(parsed_args.dir_path, parsed_args.file_ext, parsed_args.num_workers, parsed_args.remove_subdirs, parsed_args.secure_delete, skip_confirm=False)
 
 
 if __name__ == "__main__":
