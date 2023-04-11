@@ -9,9 +9,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 
 
-def download_repo(repo_url, output_dir, csv_file):
+def download_repo(repo_url, output_dir, csv_file, headers):
     try:
-        repo = git.Repo.clone_from(repo_url, os.path.join(output_dir, os.path.basename(repo_url)))
+        env = {"GIT_HTTP_USER_AGENT": headers["Accept"]}
+        if "Authorization" in headers:
+            env["GIT_HTTP_AUTHORIZATION"] = headers["Authorization"]
+
+        repo = git.Repo.clone_from(repo_url, os.path.join(output_dir, os.path.basename(repo_url)), env=env)
         print(f"Repository {repo.name} cloned.")
 
         # Log the repository details to CSV file
@@ -21,7 +25,6 @@ def download_repo(repo_url, output_dir, csv_file):
 
     except Exception as e:
         print(f"Error cloning repository {repo_url}: {e}")
-
 
 def main(args_list):
     # Parse command-line arguments
@@ -36,6 +39,7 @@ def main(args_list):
     parser.add_argument("--by-organization", type=str, required=False, help="The organization name to search for repositories")
     parser.add_argument("--code-percentage", type=int, required=False, help="The percentage of code in a repository to search for")
     parser.add_argument("--repo-name", type=str, required=False, help="The repository name to search for")
+    parser.add_argument("--github-token", type=str, required=False, help="GitHub personal access token")
     args = parser.parse_args(args_list)
 
     # Calculate the date range for repository search
@@ -66,6 +70,8 @@ def main(args_list):
     headers = {
         "Accept": "application/vnd.github.v3+json"
     }
+    if args.github_token:
+        headers["Authorization"] = f"token {args.github_token}"
 
     os.makedirs(args.output_dir, exist_ok=True)
 
@@ -75,43 +81,44 @@ def main(args_list):
             params = f"{query}&per_page={per_page}&page={page}"
             response = requests.get(f"{api_url}?{params}", headers=headers)
 
-        if response.status_code == 200:
-            result = response.json()
+            if response.status_code == 200:
+                result = response.json()
 
-            if result["total_count"] == 0:
-                print("No repositories found.")
+                if result["total_count"] == 0:
+                    print("No repositories found.")
+                    break
 
-            for item in result["items"]:
-                repo_url = item["clone_url"]
-                repo_name = "{}".format(item["name"])
-                repo_name = repo_name.replace("/", "_")
-                print(f"Adding repository {repo_name} to download list...")
-                futures.append(executor.submit(download_repo, repo_url, args.output_dir, args.csv_file.name))
+                for item in result["items"]:
+                    repo_url = item["clone_url"]
+                    repo_name = "{}".format(item["name"])
+                    repo_name = repo_name.replace("/", "_")
+                    print(f"Adding repository {repo_name} to download list...")
+                    futures.append(executor.submit(download_repo, repo_url, args.output_dir, args.csv_file.name, headers))
 
-            for future in as_completed(futures, timeout=3):
-                try:
-                    future.result()
-                except Exception as e:
-                    print(f"Error cloning repository: {e}")
+                for future in as_completed(futures, timeout=3):
+                    try:
+                        future.result()
+                    except Exception as e:
+                        print(f"Error cloning repository: {e}")
 
-            page += 1
-        else:
-            print(f"Error fetching repositories: {response.status_code} - {response.reason}")
+                page += 1
+            else:
+                print(f"Error fetching repositories: {response.status_code} - {response.reason}")
+                break
 
-        time.sleep(3)  # Add a 3-second delay between each page request
+            time.sleep(3)  # Add a 3-second delay between each page request
 
-        if not futures:
+            if not futures:
 
-            # Wait for futures to complete
-            for future in as_completed(futures, timeout=3):
-                try:
-                    future.result()
-                except Exception as e:
-                    print(f"Error cloning repository: {e}")
+                # Wait for futures to complete
+                for future in as_completed(futures, timeout=3):
+                    try:
+                        future.result()
+                    except Exception as e:
+                        print(f"Error cloning repository: {e}")
 
-            # Remove completed futures from list
-            futures = [f for f in futures if not f.done()]
-
+                # Remove completed futures from list
+                futures = [f for f in futures if not f.done()]
 
 if __name__ == "__main__":
     main(sys.argv[1:])
