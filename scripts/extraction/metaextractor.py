@@ -5,6 +5,7 @@ from PIL import Image
 from datetime import datetime
 import json
 
+
 def get_file_metadata(file_path):
     """
     Get metadata for file at given path.
@@ -22,10 +23,53 @@ def get_file_metadata(file_path):
         try:
             with Image.open(file_path) as img:
                 width, height = img.size
-        except:
+        except Exception as e:
+            print(f"Error getting metadata for file {file_path}: {e}")
             width, height = None, None
     elif file_name.lower().endswith(('.txt', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.mp3', '.mp4')):
         file_type = file_name.split('.')[-1].upper()
+        if file_type in ['PDF', 'DOC', 'DOCX', 'PPT', 'PPTX']:
+            # Extract text from file
+            try:
+                with open(file_path, 'r') as f:
+                    text = f.read()
+            except Exception as e:
+                print(f"Error getting metadata for file {file_path}: {e}")
+                text = None
+        elif file_type in ['TXT']:
+            # Read text file directly
+            try:
+                with open(file_path, 'r') as f:
+                    text = f.read()
+            except Exception as e:
+                print(f"Error getting metadata for file {file_path}: {e}")
+                text = None
+        elif file_type in ['XLS', 'XLSX']:
+            # Extract data from Excel file
+            try:
+                import pandas as pd
+                df = pd.read_excel(file_path, header=None)
+                text = '\n'.join([str(row) for row in df.values])
+            except Exception as e:
+                print(f"Error getting metadata for file {file_path}: {e}")
+                text = None
+        elif file_type in ['MP3', 'MP4']:
+            # Extract metadata from media file
+            try:
+                from tinytag import TinyTag
+                tag = TinyTag.get(file_path)
+                text = {
+                    'Title': tag.title,
+                    'Artist': tag.artist,
+                    'Album': tag.album,
+                    'Year': tag.year,
+                    'Duration': tag.duration
+                }
+            except Exception as e:
+                print(f"Error getting metadata for file {file_path}: {e}")
+                text = None
+        else:
+            text = None
         width, height = None, None
     # Add more conditions for different file types here
 
@@ -36,6 +80,7 @@ def get_file_metadata(file_path):
         "file_size": file_size,
         "modified_time": str(modified_time),
         "file_type": file_type,
+        "text": text,
         "width": width,
         "height": height,
         # Add more metadata fields here
@@ -48,11 +93,52 @@ def sort_directory(dir_path, sort_by, output_file=None):
     """
     Sort files in directory by given criteria.
     """
-    # Get list of all files in directory
-    files = [os.path.join(dir_path, f) for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
+    # Get list of all files in directory and its subdirectories
+    files = []
+    for root, directories, filenames in os.walk(dir_path):
+        for filename in filenames:
+            file_path = os.path.join(root, filename)
+            files.append(file_path)
 
     # Get metadata for each file
-    metadata = [get_file_metadata(f) for f in files]
+    metadata = []
+    for f in files:
+        try:
+            # Get metadata for different file types
+            if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                with Image.open(f) as img:
+                    width, height = img.size
+                metadata.append({
+                    "file_path": f,
+                    "file_name": os.path.basename(f),
+                    "file_size": os.path.getsize(f),
+                    "modified_time": str(datetime.fromtimestamp(os.path.getmtime(f))),
+                    "file_type": "Image",
+                    "width": width,
+                    "height": height,
+                })
+            elif f.lower().endswith(('.txt', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.mp3', '.mp4')):
+                metadata.append({
+                    "file_path": f,
+                    "file_name": os.path.basename(f),
+                    "file_size": os.path.getsize(f),
+                    "modified_time": str(datetime.fromtimestamp(os.path.getmtime(f))),
+                    "file_type": f.split('.')[-1].upper(),
+                    "width": None,
+                    "height": None,
+                })
+            else:
+                metadata.append({
+                    "file_path": f,
+                    "file_name": os.path.basename(f),
+                    "file_size": os.path.getsize(f),
+                    "modified_time": str(datetime.fromtimestamp(os.path.getmtime(f))),
+                    "file_type": "Unknown",
+                    "width": None,
+                    "height": None,
+                })
+        except Exception as e:
+            print(f"Error getting metadata for file {f}: {e}")
 
     # Sort files by given criteria
     if sort_by == "name":
@@ -71,7 +157,6 @@ def sort_directory(dir_path, sort_by, output_file=None):
     else:
         for f in sorted_files:
             print(f)
-
 
 def main(args):
     parser = argparse.ArgumentParser(description="Sort files in directory by given criteria.")
