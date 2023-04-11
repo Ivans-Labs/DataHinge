@@ -45,7 +45,22 @@ def create_module(module_name: str, args: List[Dict[str, Any]], overwrite: bool 
         f.write(f"    # {description}\n")
         for arg in arguments:
             f.write(f"    {arg['name']} = args.{arg['name']}\n")
-        f.write(f"    # Implement module functionality here\n\n")
+        f.write(f"    # Implement module functionality here\n")
+        f.write(f"    # Example usage of arguments:\n")
+        f.write(f"    # print(f'Value of {arguments[0]['name']} is: ', {arguments[0]['name']})\n\n")
+        f.write(f"def parse_arguments() -> argparse.Namespace:\n")
+        f.write(f"    parser = argparse.ArgumentParser(description='{description}')\n")
+        for arg in arguments:
+            if arg["required"]:
+                f.write(f"    parser.add_argument('--{arg['name']}', type={arg['type']}, required=True, help='{arg['description']}')\n")
+            else:
+                f.write(f"    parser.add_argument('--{arg['name']}', type={arg['type']}, help='{arg['description']}')\n")
+        f.write(f"    return parser.parse_args()\n\n")
+        f.write(f"def main() -> None:\n")
+        f.write(f"    args = parse_arguments()\n")
+        f.write(f"    {function_name}(args)\n\n")
+        f.write(f"if __name__ == '__main__':\n")
+        f.write(f"    main()\n")
 
     # Create a metadata entry for the new module
     metadata = {
