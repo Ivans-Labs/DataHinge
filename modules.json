@@ -24,6 +24,20 @@
                         "required": false,
                         "type": "int",
                         "default": 1
+                    },
+                    {
+                        "name": "remove_subdirs",
+                        "description": "Remove all subdirectories in the given directory",
+                        "required": false,
+                        "type": "bool",
+                        "default": false
+                    },
+                    {
+                        "name": "secure_delete",
+                        "description": "Securely delete files using DoD 5220.22-M standard",
+                        "required": false,
+                        "type": "bool",
+                        "default": false
                     }
                 ]
             }
@@ -95,9 +109,42 @@
                         "description": "The repository name to search for.",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "--github-token",
+                        "description": "The GitHub API token to use for authentication.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "--skip-confirm",
+                        "description": "Skip confirmation check before deleting files (default: n)",
+                        "required": true,
+                        "type": "string"
                     }
                 ]
             }
-        }
+        },
+        {
+            "file_converter": {
+                "title": "File Converter",
+                "description": "Converts a file from one format to another.",
+                "meta_title": "File Converter",
+                "args": [
+                    {
+                        "name": "input_file",
+                        "description": "The input file to convert.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "output_file",
+                        "description": "The output file to write.",
+                        "required": true,
+                        "type": "string"
+                    }
+                ]
+            }
+        }        
     ]
 }
