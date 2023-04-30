@@ -17,7 +17,8 @@ from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.shortcuts import ProgressBar
 from pygments.lexers.shell import BashLexer
 from traceback import format_exc
-
+from collections import deque
+from itertools import chain
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
@@ -29,8 +30,14 @@ config.read("config.ini")
 
 
 def completer(text: str, state: int) -> str:
-    """Completion function for readline."""
-    available_commands = ["exit", "module", "reload", "info", "interactive", "config", "alias"]
+    """
+    Completion function for readline. Provides command completion suggestions.
+
+    :param text: The text input entered by the user.
+    :param state: The index of the completion being requested.
+    :return: The completion suggestion, if any.
+    """
+    available_commands = [name for name, func in globals().items() if callable(func) and not name.startswith("_")]
     options = [cmd for cmd in available_commands if cmd.startswith(text)]
     if state < len(options):
         return options[state]
@@ -51,12 +58,18 @@ class ModuleCompleter(Completer):
             yield Completion(m, -len(word_before_cursor))
 
 
-async def run_script(script, arguments):
+async def run_script(script, arguments, background=False):
     """Run script asynchronously."""
-    with ProgressBar() as pb:
-        for i in pb(range(100)):
-            await asyncio.sleep(0.005)
-    script["module"].main(arguments)
+    if not background:
+        with ProgressBar() as pb:
+            for i in pb(range(100)):
+                await asyncio.sleep(0.005)
+
+    main_func = script["module"].main
+    if asyncio.iscoroutinefunction(main_func):
+        await main_func(arguments)
+    else:
+        main_func(arguments)
 
 def load_scripts() -> Dict[str, Dict[str, Any]]:
     """Load module data and import modules."""
@@ -256,4 +269,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
