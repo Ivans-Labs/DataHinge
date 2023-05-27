@@ -11,9 +11,9 @@ DataHinge-CLI is a command-line interface (CLI) tool that makes it easy to gathe
 -   Support for custom modules and scripts
 -   Multi-threaded processing for faster performance
 
-## Installation
+## Usage
 
-Have to run manually using python3 `datahinge-cli.py`
+Manually run using `python3 datahinge-cli.py` in the datahinge_cli dir.
 
 ## Contributing
 
