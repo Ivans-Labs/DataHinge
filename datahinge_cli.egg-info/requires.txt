@@ -1,0 +1,4 @@
+prompt_toolkit>=3.0.36
+pygments>=2.7.0
+GitPython>=3.1.31
+requests>=2.28.2

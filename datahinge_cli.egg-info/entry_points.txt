@@ -1,0 +1,2 @@
+[console_scripts]
+datahinge-cli = datahinge_cli.__main__:main

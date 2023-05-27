@@ -124,7 +124,7 @@ def list_commands(scripts):
         print(f"{module_name} - {script['description']}")
     print("\nUse 'module [module_name] --help' for module usage instructions.")
 
-def main() -> None:
+def DataHingeCLI() -> None:
     """Main CLI function."""
     readline.set_completer(completer)
     readline.parse_and_bind("tab: complete")
@@ -268,4 +268,4 @@ def main() -> None:
             break
 
 if __name__ == "__main__":
-    main()
+    DataHingeCLI()
