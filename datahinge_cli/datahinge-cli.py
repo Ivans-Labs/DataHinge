@@ -1,5 +1,5 @@
 import argparse
-import importlib
+import importlib.util
 import json
 import os
 import sys
@@ -72,12 +72,18 @@ async def run_script(script, arguments, background=False):
         main_func(arguments)
 
 def load_scripts() -> Dict[str, Dict[str, Any]]:
-    """Load module data and import modules."""
+    """Load script data and import modules."""
     sys.path.append(os.path.join(os.getcwd(), "scripts"))
 
     scripts = {}
     with open("modules.json") as f:
         modules_data = json.load(f)
+
+    # Initialize separate logger for module loading errors
+    error_logger = logging.getLogger('module_error')
+    error_logger.setLevel(logging.ERROR)
+    handler = logging.FileHandler('module-error.log')
+    error_logger.addHandler(handler)
 
     for root, dirs, files in os.walk(os.path.join(os.getcwd(), "scripts")):
         for file_name in files:
@@ -89,9 +95,12 @@ def load_scripts() -> Dict[str, Dict[str, Any]]:
                     spec = importlib.util.spec_from_file_location(module_name, file_path)
                     module = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(module)
-                except ModuleNotFoundError:
-                    print(f"Error: Could not import module {module_name}")
+                except Exception as e:   # Generalize the exception
+                    error_msg = f"Error: Could not import module {module_name}. {str(e)}"
+                    print(error_msg)
+                    error_logger.error(error_msg)   # Log the error message
                     continue
+
                 scripts[module_name] = {
                     "module": module,
                     "title": module_data.get("title", module_name),
