@@ -1,8 +1,8 @@
  ![alt text](https://cdn.statically.io/gh/Sudo-Ivan/MyWebsite-Assets/main/images/logo/datahinge.png)
 
-# DataHinge-CLI
+# DataHinge
 
-DataHinge-CLI is a command-line interface (CLI) tool that makes it easy to gather data from many sources, manage and also process data files. I built it for myself but would like to share it with the world.
+DataHinge is a currently* a command-line interface (CLI) tool that makes it easy to gather data from many sources, manage and also process data files. I built it for myself but would like to share it with the world.
 
 ## Ideas
 
