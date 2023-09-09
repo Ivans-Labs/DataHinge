@@ -8,7 +8,6 @@ import csv
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 
-
 def download_repo(repo_url, output_dir, csv_file, headers):
     try:
         env = {"GIT_HTTP_USER_AGENT": headers["Accept"]}
@@ -44,6 +43,7 @@ def main(args_list):
     parser.add_argument("--by-organization", type=str, required=False, help="The organization name to search for repositories")
     parser.add_argument("--code-percentage", type=int, required=False, help="The percentage of code in a repository to search for")
     parser.add_argument("--repo-name", type=str, required=False, help="The repository name to search for")
+    parser.add_argument("--contains", type=str, required=False, help="Filter repositories by term contained in the title")
     parser.add_argument("--github-token", type=str, required=False, help="GitHub personal access token")
     args = parser.parse_args(args_list)
 
@@ -69,6 +69,8 @@ def main(args_list):
         query += f"+size:<={args.size_limit * 1000}"
     if args.code_percentage:
         query += f"+size:<={args.code_percentage}%"
+    if args.contains:
+        query += f"+{args.contains}+in:name"
 
     per_page = 100
     page = 1
@@ -127,4 +129,3 @@ def main(args_list):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
-
