@@ -30,13 +30,6 @@ config.read("config.ini")
 
 
 def completer(text: str, state: int) -> str:
-    """
-    Completion function for readline. Provides command completion suggestions.
-
-    :param text: The text input entered by the user.
-    :param state: The index of the completion being requested.
-    :return: The completion suggestion, if any.
-    """
     available_commands = [name for name, func in globals().items() if callable(func) and not name.startswith("_")]
     options = [cmd for cmd in available_commands if cmd.startswith(text)]
     if state < len(options):
@@ -46,7 +39,6 @@ def completer(text: str, state: int) -> str:
 
 
 class ModuleCompleter(Completer):
-    """Completion class for module selector."""
 
     def __init__(self, scripts):
         self.scripts = scripts
@@ -59,7 +51,6 @@ class ModuleCompleter(Completer):
 
 
 async def run_script(script, arguments, background=False):
-    """Run script asynchronously."""
     if not background:
         with ProgressBar() as pb:
             for i in pb(range(100)):
@@ -72,14 +63,12 @@ async def run_script(script, arguments, background=False):
         main_func(arguments)
 
 def load_scripts() -> Dict[str, Dict[str, Any]]:
-    """Load script data and import modules."""
     sys.path.append(os.path.join(os.getcwd(), "scripts"))
 
     scripts = {}
     with open("modules.json") as f:
         modules_data = json.load(f)
 
-    # Initialize separate logger for module loading errors
     error_logger = logging.getLogger('module_error')
     error_logger.setLevel(logging.ERROR)
     handler = logging.FileHandler('module-error.log')
@@ -95,10 +84,10 @@ def load_scripts() -> Dict[str, Dict[str, Any]]:
                     spec = importlib.util.spec_from_file_location(module_name, file_path)
                     module = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(module)
-                except Exception as e:   # Generalize the exception
+                except Exception as e:
                     error_msg = f"Error: Could not import module {module_name}. {str(e)}"
                     print(error_msg)
-                    error_logger.error(error_msg)   # Log the error message
+                    error_logger.error(error_msg)
                     continue
 
                 scripts[module_name] = {
@@ -116,7 +105,6 @@ def load_scripts() -> Dict[str, Dict[str, Any]]:
     return scripts
     
 def list_commands(scripts):
-    """List available commands with descriptions."""
     print("Available commands:")
     print("===================")
     print("exit - Exit the program")
@@ -134,7 +122,6 @@ def list_commands(scripts):
     print("\nUse 'module [module_name] --help' for module usage instructions.")
 
 def DataHingeCLI() -> None:
-    """Main CLI function."""
     readline.set_completer(completer)
     readline.parse_and_bind("tab: complete")
 
@@ -260,14 +247,12 @@ def DataHingeCLI() -> None:
                 else:
                     print("Error: Alias command requires zero, one, or two arguments.")
             else:
-                # Check for aliases
                 if command in aliases:
                     alias_command = aliases[command]
                     user_input = f"{alias_command} {' '.join(arguments)}".split()
                     command = user_input[0]
                     arguments = user_input[1:]
                 else:
-                    # Print help for modules
                     print("Available modules:")
                     for module_name, script in scripts.items():
                         print(f"{module_name} - {script['description']}")
