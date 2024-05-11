@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from git import git_clone
 from databases import postgres
+from dockerutil import dockerutil
 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Depends
@@ -14,3 +15,4 @@ origins = [
 
 app.include_router(git_clone.router)
 app.include_router(postgres.router)
+app.include_router(dockerutil.router)
