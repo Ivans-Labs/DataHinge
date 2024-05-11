@@ -2,18 +2,7 @@
 
 # DataHinge
 
-DataHinge is a currently* a command-line interface (CLI) tool that makes it easy to gather data from many sources, manage and also process data files. I built it for myself but would like to share it with the world.
-
-## Ideas
-
--   Easy-to-use CLI interface for managing data files
--   Multiple reloadable modules for common data processing tasks
--   Support for custom modules and scripts
--   Multi-threaded processing for faster performance
-
-## Usage
-
-Manually run using `python3 datahinge-cli.py` in the datahinge_cli dir.
+DataHinge is a fastAPI project to interact with hundreds of things.
 
 ## Contributing
 
